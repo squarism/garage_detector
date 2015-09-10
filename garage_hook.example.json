@@ -1,0 +1,11 @@
+{
+  "event": "garage/open",
+  "url": "http://some.place.yourwebserver",
+  "requestType": "POST",
+  "json": {
+    "door_open": "{{door_open}}",
+    "voltage": "{{voltage}}",
+    "data": "{{data}}",
+    "timecreated": "{{SPARK_PUBLISHED_AT}}"
+  }
+}

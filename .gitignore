@@ -24,5 +24,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+*.swap
+
 # Project Specifics
 garage_hook.json
