@@ -1,6 +1,6 @@
 ## Garage Door Detector
 
-_Problem: I leave my garage open all night.  I can't see my garage door from any window.  We can solve this third-world problem easily._
+_Problem: I leave my garage open all night.  I can't see my garage door from any window.  We can solve this first-world problem easily._
 
 This is some code that sends a single event when basically
 a boolean value has changed on an Arduino (particle core).
