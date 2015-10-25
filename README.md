@@ -18,11 +18,13 @@ Particle service (webhook) --> sends events to subscribers
 ```
 You could send arbitrary data and messages to anything you want.
 
+```
+Monitor --> subscribes to events (turns on status light)
+```
 
-## TODO: 
-
-* add code for a monitor:
-  * this would let you put another particle somewhere so you could see if your garage door was open (maybe far away in a kitchen or something)
+I put the status light in a common place so everyone can see before they
+go to bed whether the garage is open.  _TODO_: Pics and blog post to
+illustrate.
 
 
 ## Tools
