@@ -26,21 +26,11 @@ int doorState;
 const int GARAGE_CLOSED = 0;
 const int GARAGE_OPEN = 1;
 
-void garageOpenedEvent() {
-  Spark.publish("garage/open", "true", 60, PRIVATE);
-}
-
-void garageClosedEvent() {
-  Spark.publish("garage/open", "false", 60, PRIVATE);
-}
 
 void setup() {
-  Serial.begin(9600);
   pinMode(led1, OUTPUT);
   pinMode(door, INPUT);
 
-  Spark.variable("garage/voltage", &sensorValue, DOUBLE);
-  Spark.variable("garage/door_open", &door_open, STRING);
   readDoorSensor();
   previousState = doorState;
 }
@@ -90,7 +80,7 @@ void sendEvent() {
   json.concat(roundedVoltage);
   json.concat("}");
 
-  Spark.publish("garage/open", json, 60, PRIVATE);
+  Particle.publish("squarism/garage/open", json, 60, PRIVATE);
 }
 
 void loop() {

@@ -24,7 +24,7 @@ void setup() {
   Serial.begin(9600);
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
-  Particle.subscribe("garage/open", eventHandler);
+  Particle.subscribe("squarism/garage/open", eventHandler);
   Serial.println("I'm booted!");
 }
 
@@ -49,7 +49,7 @@ void eventHandler(const char *event, const char *data) {
     char dataCopy[len+1];
     strcpy(dataCopy, data);
 
-    StaticJsonBuffer<500> jsonBuffer;
+    StaticJsonBuffer<200> jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject(dataCopy);
     
     if (json["door_open"] == true) {
