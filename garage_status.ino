@@ -15,7 +15,7 @@ int doorState = -1;
 
 // don't run during "the day", define what that means here
 int blackoutStart = 3;  // 3am
-int blackoutEnd  = 21; // 6pm
+int blackoutEnd  = 18;  // 6pm
 // I'd love to use the positive inflection here but it's too hard to
 // implement without a real time/date library.  You can't easily
 // represent like 3am -- meaning the next day with a number.
@@ -24,7 +24,7 @@ int blackoutEnd  = 21; // 6pm
 void setup() {
   // Serial.begin(9600);
 
-  Time.zone(-7);  // PDT
+  Time.zone(-7);  // PDT, be wary of daylight savings adjustments.  :(
 
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
