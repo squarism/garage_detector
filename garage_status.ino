@@ -4,33 +4,42 @@
 // This #include statement was automatically added by the Particle IDE.
 #include "neopixel/neopixel.h"
 
-// ---- CHANGE THIS ----
+
+// ---- CUSTOMIZE ME ----
 #define PIXEL_PIN D1
 #define PIXEL_COUNT 2
 #define PIXEL_TYPE WS2812B
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
-
-int doorState = -1;
-
-// don't run during "the day", define what that means here
-int blackoutStart = 3;  // 3am
-int blackoutEnd  = 18;  // 6pm
-// I'd love to use the positive inflection here but it's too hard to
+// blackout means don't run during "the day", define what times that means here
+int lightupStart = 18;  // time in 24h to display - 6pm
+int lightupHours = 9;   // hours to light         - 3am
+// I'd love to use the do time ranges here but it's too hard to
 // implement without a real time/date library.  You can't easily
 // represent like 3am -- meaning the next day with a number.
 
+// ---- END CUSTOMIZE ME ----
+
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
+
+int doorState = -1;
+bool lightupEndNextDay;
+int currentHour;
+int lightupEnd;
 
 void setup() {
   // Serial.begin(9600);
 
-  Time.zone(-7);  // PDT, be wary of daylight savings adjustments.  :(
+  Time.zone(-7);  // PST
 
   strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  strip.show();   // Initialize all pixels to 'off'
+
   Particle.subscribe("squarism/garage/open", eventHandler);
 
-  // Serial.println("I'm booted!");
+  // figure out if operating time is actually next day
+  lightupEndNextDay = endTimeIsNextDay();
+  //   Serial.println("I'm booted!");
 }
 
 void loop() {
@@ -38,6 +47,12 @@ void loop() {
     Particle.connect();
   }
   Particle.process();
+
+  // Do you guys like TDD?  Do you guys like testing?  Well listen to this!
+  // ** Johnny B. Goode plays while testers cry blood **
+  // Time.setTime(1446023974);  // 2am
+  // Time.setTime(1446029100);  // 3:45am
+  // Time.setTime(1446031100);  // 4:18am
 
   if (isOperatingTime()) {
     switch(doorState)
@@ -54,6 +69,8 @@ void loop() {
     blankStrip();
     delay(60000);
   }
+
+  delay(5000);
 }
 
 void eventHandler(const char *event, const char *data) {
@@ -76,14 +93,35 @@ void eventHandler(const char *event, const char *data) {
   }
 }
 
-bool isOperatingTime() {
-  if (!((Time.hour() >= blackoutStart) && (Time.hour() <= blackoutEnd))) {
+bool endTimeIsNextDay() {
+  if (lightupStart + lightupHours >= 24) {
     return true;
   } else {
     return false;
   }
 }
 
+bool isOperatingTime() {
+  currentHour = Time.hour();
+  lightupEnd = lightupStart + lightupHours;
+
+  // same day calculation
+  if ( (lightupEndNextDay == false) && ((currentHour >= lightupStart) && (currentHour < lightupEnd))) {
+    return true;
+  }
+
+  // End time is tomorrow.
+  // Let's say that operating time is 6pm to 3am.  That's 18 --> 27, 27 representing the next day.
+  // We will count time from 18 on up and then from 3 to 0.  So we measure the bleed over with the or statement below
+  // here to cover the "next day" case.
+  if ( (lightupEndNextDay == true) && (currentHour >= lightupStart) || (currentHour <= (lightupEnd - 24))) {
+    return true;
+  }
+
+  return false;
+}
+
+// Turn all the neopixels off
 void blankStrip() {
   uint32_t black = strip.Color(0, 0, 0);
   for(uint16_t i=0; i<strip.numPixels(); i++) {
@@ -100,6 +138,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
+// Sort of a red to orange fade effect.  Pretty sweet.
 void fireRing(uint16_t wait) {
   uint16_t i, j;
   int colorStart = 95;  // a pure red
@@ -119,9 +158,9 @@ void fireRing(uint16_t wait) {
     strip.show();
     delay(wait);
   }
-
 }
 
+// Sort of a blue to light blue fade effect.  Soothing.
 void iceRing(uint16_t wait) {
   uint16_t i, j;
   int colorStart = 166;  // blue
@@ -141,7 +180,6 @@ void iceRing(uint16_t wait) {
     strip.show();
     delay(wait);
   }
-
 }
 
 
