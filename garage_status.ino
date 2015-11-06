@@ -12,7 +12,7 @@
 
 // blackout means don't run during "the day", define what times that means here
 int lightupStart = 18;  // time in 24h to display - 6pm
-int lightupHours = 9;   // hours to light         - 3am
+int lightupHours = 8;   // hours to light         - 3am
 // I'd love to use the do time ranges here but it's too hard to
 // implement without a real time/date library.  You can't easily
 // represent like 3am -- meaning the next day with a number.
@@ -25,27 +25,34 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 int doorState = -1;
 bool lightupEndNextDay;
 int currentHour;
-int lightupEnd;
+int lightupEnd = lightupStart + lightupHours;
 
 void setup() {
-  // Serial.begin(9600);
-
-  Time.zone(-7);  // PST
+  Serial.begin(9600);
+  RGB.control(true);
 
   strip.begin();
   strip.show();   // Initialize all pixels to 'off'
+  strip.setBrightness(240);
 
   Particle.subscribe("squarism/garage/open", eventHandler);
 
+  connect();
+  Time.zone(-7);  // PST
+
   // figure out if operating time is actually next day
   lightupEndNextDay = endTimeIsNextDay();
-  //   Serial.println("I'm booted!");
+  Serial.println("I'm booted!");
 }
 
-void loop() {
+void connect() {
   if (Particle.connected() == false) {
     Particle.connect();
   }
+}
+
+void loop() {
+  connect();
   Particle.process();
 
   // Do you guys like TDD?  Do you guys like testing?  Well listen to this!
@@ -55,22 +62,26 @@ void loop() {
   // Time.setTime(1446031100);  // 4:18am
 
   if (isOperatingTime()) {
+    RGB.color(0,80,0);  // operating time debug light
+
     switch(doorState)
     {
       case 1:
-        fireRing(200);
+        fireRing(100);
         break;
       case 0:
-        iceRing(200);
+        iceRing(100);
+        break;
+      default:
         break;
     }
   } else {
-    // sort of a sleep mode here
+    RGB.color(80,0,0);  // operating time debug light
+
     blankStrip();
-    delay(60000);
   }
 
-  delay(5000);
+  delay(1000);
 }
 
 void eventHandler(const char *event, const char *data) {
@@ -103,10 +114,12 @@ bool endTimeIsNextDay() {
 
 bool isOperatingTime() {
   currentHour = Time.hour();
-  lightupEnd = lightupStart + lightupHours;
 
   // same day calculation
-  if ( (lightupEndNextDay == false) && ((currentHour >= lightupStart) && (currentHour < lightupEnd))) {
+  if (
+      (lightupEndNextDay == false) &&
+      ((currentHour >= lightupStart) && (currentHour < lightupEnd))
+     ) {
     return true;
   }
 
@@ -114,14 +127,16 @@ bool isOperatingTime() {
   // Let's say that operating time is 6pm to 3am.  That's 18 --> 27, 27 representing the next day.
   // We will count time from 18 on up and then from 3 to 0.  So we measure the bleed over with the or statement below
   // here to cover the "next day" case.
-  if ( (lightupEndNextDay == true) && (currentHour >= lightupStart) || (currentHour <= (lightupEnd - 24))) {
+  if (
+      (lightupEndNextDay == true) &&
+      (currentHour >= lightupStart) || (currentHour <= (lightupEnd - 24))
+     ) {
     return true;
   }
 
   return false;
 }
 
-// Turn all the neopixels off
 void blankStrip() {
   uint32_t black = strip.Color(0, 0, 0);
   for(uint16_t i=0; i<strip.numPixels(); i++) {
@@ -138,11 +153,10 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
-// Sort of a red to orange fade effect.  Pretty sweet.
 void fireRing(uint16_t wait) {
   uint16_t i, j;
-  int colorStart = 95;  // a pure red
-  int colorEnd = 125;   // the led starts to blink purple
+  int colorStart = 93;  // a pure red
+  int colorEnd = 127;   // the led starts to blink purple
 
   for(j=colorStart; j<colorEnd; j++) {
     for(i=0; i<strip.numPixels(); i++) {
@@ -158,13 +172,13 @@ void fireRing(uint16_t wait) {
     strip.show();
     delay(wait);
   }
+
 }
 
-// Sort of a blue to light blue fade effect.  Soothing.
 void iceRing(uint16_t wait) {
   uint16_t i, j;
-  int colorStart = 166;  // blue
-  int colorEnd = 199;    // blue-green
+  int colorStart = 162;  // blue
+  int colorEnd = 200;    // blue-green
 
   for(j=colorStart; j<colorEnd; j++) {
     for(i=0; i<strip.numPixels(); i++) {
@@ -180,6 +194,7 @@ void iceRing(uint16_t wait) {
     strip.show();
     delay(wait);
   }
+
 }
 
 
